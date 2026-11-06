@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPG Status: Astro Profile - あなたのトリセツ</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Zen Kaku Gothic New', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        .pixel-font {
+            font-family: 'DotGothic16', sans-serif;
+        }
+        /* Custom Gaming/Sci-Fi Border Glow */
+        .status-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        .status-card:hover {
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        /* Print Optimization Styles */
+        @media print {
+            body {
+                background-color: #ffffff !important;
+                color: #000000 !important;
+            }
+            header, #input-section, .no-print {
+                display: none !important;
+            }
+            .status-card {
+                background: #ffffff !important;
+                border: 1px solid #cbd5e1 !important;
+                box-shadow: none !important;
+                color: #0f172a !important;
+                break-inside: avoid;
+                margin-bottom: 16px;
+            }
+            * {
+                color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            h1, h2, h3, h4, span, p {
+                color: #1e293b !important;
+            }
+            .bg-slate-900, .bg-slate-900\/60, .bg-slate-900\/50, .bg-slate-900\/40 {
+                background-color: #f8fafc !important;
+                border: 1px solid #e2e8f0 !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-12">
+
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/80 sticky top-0 z-50 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 p-2 rounded-lg text-white shadow-lg shadow-indigo-500/30">
+                    <i data-lucide="sparkles" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 pixel-font">
+                        ASTRO STATUS BOARD
+                    </h1>
+                    <p class="text-xs text-slate-400">星で解き明かす【あなたのパーソナル取扱説明書】</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="scrollToInput()" class="no-print text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg border border-slate-700 transition flex items-center gap-1">
+                    <i data-lucide="sliders" class="w-4 h-4"></i> 天体設定
+                </button>
+                <button onclick="openTextExportModal()" class="no-print text-xs bg-emerald-600/80 hover:bg-emerald-600 text-white px-3 py-2 rounded-lg transition flex items-center gap-1 shadow-md">
+                    <i data-lucide="file-text" class="w-4 h-4"></i> テキスト出力
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 pt-6 space-y-8">
+
+        <!-- Controls / Inputs Section -->
+        <section id="input-section" class="status-card p-6 rounded-2xl no-print">
+            <div class="flex items-center justify-between mb-4 border-b border-slate-700/60 pb-3">
+                <h2 class="text-lg font-bold text-indigo-300 flex items-center gap-2">
+                    <i data-lucide="user-cog" class="w-5 h-5"></i> ステータス入力・天体サイン設定
+                </h2>
+                <span class="text-xs text-slate-400">※各天体の星座を選択するか、誕生日入力で自動推定できます</span>
+            </div>
+
+            <!-- Profile Info Input -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">プレイヤー名 (名前)</label>
+                    <input type="text" id="player-name" value="冒険者" oninput="updateName(this.value)" placeholder="名前を入力" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">生年月日 (星座推定用)</label>
+                    <input type="date" id="birth-date" value="2000-01-01" onchange="autoCalculateSigns()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-xs font-semibold text-slate-400">生まれ時間 (月星座等の精度向上)</label>
+                        <label class="flex items-center gap-1 text-[11px] text-indigo-300 cursor-pointer">
+                            <input type="checkbox" id="time-unknown-check" onchange="toggleTimeUnknown()" class="rounded bg-slate-800 border-slate-700 text-indigo-600 focus:ring-indigo-500">
+                            <span>時間不明 (12:00で計算)</span>
+                        </label>
+                    </div>
+                    <input type="time" id="birth-time" value="12:00" onchange="autoCalculateSigns()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+            </div>
+
+            <!-- Planets Selector Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3" id="planet-select-grid">
+                <!-- Javascript will insert selectors dynamically -->
+            </div>
+        </section>
+
+        <!-- Main Character Card Header -->
+        <section class="status-card p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 relative overflow-hidden">
+            <div class="absolute -right-10 -bottom-10 opacity-10 pointer-events-none">
+                <i data-lucide="compass" class="w-64 h-64 text-indigo-400"></i>
+            </div>
+            
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+                <div class="flex items-center gap-4">
+                    <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-indigo-600 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 text-3xl font-black pixel-font" id="avatar-icon">
+                        ✨
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 uppercase tracking-widest">CHARACTER PROFILE</span>
+                            <span class="text-xs text-slate-400" id="display-date">2000/01/01 生まれ</span>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-black text-white mt-1" id="display-name">冒険者</h2>
+                        <p class="text-sm text-indigo-300 font-medium mt-0.5" id="display-title">太陽: 山羊座 / 月: 牡牛座</p>
+                    </div>
+                </div>
+
+                <!-- Core Stats Quick View -->
+                <div class="grid grid-cols-2 gap-3 w-full md:w-auto">
+                    <div class="bg-slate-900/80 border border-slate-800 p-3 rounded-xl min-w-[130px]">
+                        <span class="text-[10px] text-slate-400 block font-semibold">主属性 (太陽)</span>
+                        <span class="text-base font-bold text-amber-400 flex items-center gap-1" id="sun-summary">
+                            <i data-lucide="sun" class="w-4 h-4"></i> 山羊座
+                        </span>
+                    </div>
+                    <div class="bg-slate-900/80 border border-slate-800 p-3 rounded-xl min-w-[130px]">
+                        <span class="text-[10px] text-slate-400 block font-semibold">裏属性 (月)</span>
+                        <span class="text-base font-bold text-cyan-400 flex items-center gap-1" id="moon-summary">
+                            <i data-lucide="moon" class="w-4 h-4"></i> 牡牛座
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Status Dashboard Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="status-display-grid">
+            <!-- Dynamically populated status cards will go here -->
+        </div>
+
+    </main>
+
+    <!-- Text Export Modal -->
+    <div id="text-export-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl p-6 shadow-2xl relative flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-800 mb-4">
+                <h3 class="text-lg font-bold text-indigo-300 flex items-center gap-2">
+                    <i data-lucide="file-text" class="w-5 h-5"></i> パーソナル・トリセツ (テキスト形式)
+                </h3>
+                <button onclick="closeTextExportModal()" class="text-slate-400 hover:text-white p-1">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-400 mb-3">下のテキストをコピーしてメモ帳やSNSに貼り付けたり、テキストファイルとして保存できます。</p>
+            <textarea id="export-textarea" readonly class="w-full flex-1 bg-slate-950 border border-slate-800 rounded-xl p-4 text-xs font-mono text-slate-200 h-80 focus:outline-none resize-none mb-4"></textarea>
+            <div class="flex justify-end gap-3">
+                <button onclick="copyExportText()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-indigo-600/30">
+                    <i data-lucide="copy" class="w-4 h-4"></i> クリップボードにコピー
+                </button>
+                <button onclick="downloadTextFile()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 border border-slate-700">
+                    <i data-lucide="download" class="w-4 h-4"></i> テキストファイルで保存
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-12 text-center text-xs text-slate-500 border-t border-slate-800/80 pt-6 no-print">
+        <p>ASTRO STATUS BOARD &copy; 西洋占星術・個人取扱説明書ジェネレーター</p>
+    </footer>
+
+    <script>
+        // --- 1. ASTROLOGY DATA DICTIONARY ---
+        const ZODIAC_SIGNS = ["牡羊座", "牡牛座", "双子座", "蟹座", "獅子座", "乙女座", "天秤座", "蠍座", "射手座", "山羊座", "水瓶座", "魚座"];
+
+        const PLANETS_CONFIG = [
+            { key: "sun", name: "太陽", icon: "sun", color: "from-amber-500 to-orange-500", textColor: "text-amber-400", desc: "人生の主目的・自己表現・基本性格" },
+            { key: "moon", name: "月", icon: "moon", color: "from-cyan-500 to-blue-500", textColor: "text-cyan-400", desc: "感情・プライベートの自分・無意識の欲求" },
+            { key: "mercury", name: "水星", icon: "message-square", color: "from-emerald-500 to-teal-500", textColor: "text-emerald-400", desc: "知性・コミュニケーションの取り方・勉強スタイル" },
+            { key: "venus", name: "金星", icon: "heart", color: "from-pink-500 to-rose-500", textColor: "text-pink-400", desc: "恋愛傾向・好み・趣味・ときめくもの" },
+            { key: "mars", name: "火星", icon: "flame", color: "from-red-500 to-orange-600", textColor: "text-red-400", desc: "行動力・情熱・モチベーション・運動" },
+            { key: "jupiter", name: "木星", icon: "sparkles", color: "from-yellow-400 to-amber-600", textColor: "text-yellow-400", desc: "開運アクション・拡大・自己投資・幸運" },
+            { key: "saturn", name: "土星", icon: "shield", color: "from-indigo-600 to-slate-700", textColor: "text-indigo-400", desc: "起こりうる試練・自己管理・隠れたスキル・蓄財" },
+            { key: "dragonhead", name: "ドラゴンヘッド", icon: "compass", color: "from-purple-500 to-indigo-500", textColor: "text-purple-400", desc: "今世の挑戦目標・成長の方向性" },
+            { key: "dragontail", name: "ドラゴンテイル", icon: "history", color: "from-slate-500 to-zinc-600", textColor: "text-slate-400", desc: "過去のカルマ・得意な無意識パターン" }
+        ];
+
+        // Detailed Content Matrix for all Signs & Planets
+        const ASTRO_DATA = {
+            "牡羊座": {
+                personality: "開拓精神にあふれる直感型のアグレッシブスピリット。思い立ったら即行動のスピード派。",
+                sun: { quote: "「誰も進んだことのない道にこそ、本当の光がある。」", outfit: "スポーティでエッジの効いたジャケット、赤を取り入れたスタイル", color: "ビビッドレッド", item: "最新のスマートウォッチ" },
+                moon: { goods: "爽やかなアロマオイル", place: "風通しの良い高台", stress: "短時間で一気に汗を流す運動", interior: "ビタミンカラーのアクセント" },
+                mercury: { book: "起業家の自伝", talkHabit: "結論から先に言う。語気が強い", study: "ポモドーロ短期集中学習" },
+                venus: { food: "スパイシーな料理", hobby: "体験型アクティビティ", attract: "強固な意志を持つ熱い人", music: "テンポの速いロック" },
+                mars: { sport: "ボクシング、短距離走", motivation: "ライバルを設定し「1番になる」目標を立てる" },
+                jupiter: { action: "未経験分野への一番乗り飛び込み", investment: "即断即決のスキル習得" },
+                saturn: { skill: "圧倒的な危機突破力", savings: "短期集中目標型貯蓄", selfMgmt: "即手付けルール", advice: "「焦りは禁物。一呼吸置くことで真の力が発揮される」" },
+                dragonhead: { hobby: "ソロキャンプ・新しいスポーツ", relation: "お互いの自由を尊重できるサッパリした人間関係" },
+                dragontail: { karma: "他人に合わせすぎて意志を見失う癖", pattern: "空気を読んで抑える妥協パターン", release: "「他人の評価」への過度な執着" }
+            },
+            "牡牛座": {
+                personality: "マイペースで五感が鋭い現実派。確実なステップを踏み、美しいものや美味しいものを愛する。",
+                sun: { quote: "「美しいものは焦らずじっくりと育まれる。」", outfit: "肌触りの良い上質なシルク、クラシックテイスト", color: "アースグリーン", item: "レザー小物" },
+                moon: { goods: "高級アロマキャンドル", place: "静かなカフェ・庭園", stress: "美味しいものを堪能する", interior: "温もりのある木目・観葉植物" },
+                mercury: { book: "実用的な資産作りガイド", talkHabit: "穏やかでテンポがゆっくり", study: "五感を活用した勉強法" },
+                venus: { food: "本格料理・職人スイーツ", hobby: "美食巡り・ガーデニング", attract: "落ち着きがあり約束を守る誠実な人", music: "アコースティック、ジャズ" },
+                mars: { sport: "ヨガ、ウエイトトレーニング", motivation: "「やり遂げた後のご褒美」を用意する" },
+                jupiter: { action: "本物の価値・五感を磨く体験", investment: "実用的な技術・資格の習得" },
+                saturn: { skill: "圧倒的継続力", savings: "堅実な積立投資", selfMgmt: "生活リズム固定化", advice: "「変化を恐れず古いものを手放す勇気を持とう」" },
+                dragonhead: { hobby: "料理・資産運用", relation: "時間をかけ深い信頼を築ける環境" },
+                dragontail: { karma: "変化を恐れ現状維持に固執する癖", pattern: "安全圏へ退避する防衛パターン", release: "「目に見える安全」への執着" }
+            },
+            "双子座": {
+                personality: "好奇心旺盛で情報感度の高い知的なプレイヤー。フットワークの軽さが武器。",
+                sun: { quote: "「世界は面白い知的好奇心で満ちあふれている。」", outfit: "スマートカジュアル、軽快なレイヤード", color: "スカイブルー", item: "最新ガジェット" },
+                moon: { goods: "ミント系タブレット", place: "賑やかな街・書店", stress: "気ままなドライブ・散歩", interior: "風通しの良いスタイリッシュ空間" },
+                mercury: { book: "トレンド本・雑学書", talkHabit: "話題が豊富でレスポンスが早い", study: "複数テキスト並行学習法" },
+                venus: { food: "話題の最新スイーツ", hobby: "SNS発信、カードゲーム", attract: "会話のテンポが合いウィットに富んだ人", music: "シティポップ" },
+                mars: { sport: "バドミントン、卓球", motivation: "ゲーム感覚で変化をつける" },
+                jupiter: { action: "情報収集と人脈のハブになる", investment: "Web・ITスキル、速読術" },
+                saturn: { skill: "情報の核心を見抜く編集力", savings: "リスク分散型貯蓄", selfMgmt: "タスクのゲーム化管理", advice: "「ひとつのことに深く潜り込む時間も大切に」" },
+                dragonhead: { hobby: "ポッドキャスト配信・語学", relation: "風通しがよく自由な情報交換ができる仲間" },
+                dragontail: { karma: "表面的な噂話に振り回される癖", pattern: "表層の知識で場を収めるパターン", release: "「全てを知っておくべき」という焦り" }
+            },
+            "蟹座": {
+                personality: "豊かな感情と強い仲間意識を持つ共感力の塊。大切なものを守り育てる温かな防衛者。",
+                sun: { quote: "「愛する存在を守ることこそ、最大の強さである。」", outfit: "柔らかいニット、優しく包み込むスタイリング", color: "パールホワイト", item: "お守りグッズ" },
+                moon: { goods: "ふわふわの毛布", place: "自分の部屋・実家", stress: "信頼できる人と泣ける映画を見る", interior: "アットホームなカントリー調" },
+                mercury: { book: "感動的な物語", talkHabit: "共感フレーズ「わかる〜」が多い", study: "人に教えるつもりで行うレクチャー学習" },
+                venus: { food: "おふくろの味、家庭料理", hobby: "料理、DIY、ペットの世話", attract: "家庭的で自分の気持ちを包んでくれる人", music: "ハートフルなバラード" },
+                mars: { sport: "水泳、チームスポーツ", motivation: "「大切な仲間やチームのため」という想い" },
+                jupiter: { action: "身近な人との絆を深める居場所作り", investment: "ケアスキル・住空間の快適化" },
+                saturn: { skill: "連帯感を高める組織養護力", savings: "安全第一の家計簿管理", selfMgmt: "感情の日記化による客観視", advice: "「他人の感情を引き受けすぎない境界線を持とう」" },
+                dragonhead: { hobby: "家庭菜園・ホームパーティー", relation: "家族のように温かくお互いを守り合えるコミュニティ" },
+                dragontail: { karma: "肩書や責任に追われて心を冷やす癖", pattern: "完璧な役割を果たそうとするパターン", release: "「完璧な成果を出さねば」という過度な責任感" }
+            },
+            "獅子座": {
+                personality: "圧倒的な主役オーラを放つドラマチックな表現者。存在感と熱いハートで周囲を照らす。",
+                sun: { quote: "「人生という舞台で、誰もが自分の物語の主人公である。」", outfit: "華やかでインパクトのある服", color: "ゴールド", item: "ステータスアクセサリー" },
+                moon: { goods: "高級感のあるバスソルト", place: "スポットライトの当たる場所", stress: "自分を甘やかす高級ホテルステイ", interior: "ラグジュアリーなアート空間" },
+                mercury: { book: "ヒーロー物語・リーダーシップ論", talkHabit: "堂々として表現がドラマチック", study: "プレゼン形式発表学習" },
+                venus: { food: "豪華なローストビーフ", hobby: "演劇鑑賞・イベント企画", attract: "自分を心から称賛してくれる華やかな人", music: "ミュージカルナンバー" },
+                mars: { sport: "ダンス、アクロバット", motivation: "「注目と称賛が得られるステージ」を用意する" },
+                jupiter: { action: "オリジナル作品の堂々たる発信", investment: "自己ブランディング・表現力" },
+                saturn: { skill: "折れない自己肯定感とリーダーシップ", savings: "豪快かつメリハリのある貯蓄", selfMgmt: "情熱メーター管理", advice: "「時には脇役に回り他人の輝きを称えよう」" },
+                dragonhead: { hobby: "ダンス・舞台出演・YouTube", relation: "お互いの個性を高め合えるエンタメ的な仲間" },
+                dragontail: { karma: "周りに合わせて個性を埋もれさせる癖", pattern: "グループの意見に埋没するパターン", release: "「目立ってはいけない」という自己制限" }
+            },
+            "乙女座": {
+                personality: "緻密な分析力と高い処理能力を持つ細やかサポートのプロ。完璧を目指す努力家。",
+                sun: { quote: "「神は細部に宿る。誠実な努力こそが成果を生む。」", outfit: "清潔感のあるシャツ、プレスされたトラッド系", color: "ネイビー", item: "機能的な手帳" },
+                moon: { goods: "オーガニックハーブティー", place: "整頓された自室・図書館", stress: "部屋の大掃除・断捨離", interior: "ミニマル＆収納美" },
+                mercury: { book: "実用的なマニュアル・専門書", talkHabit: "論理的で丁寧、細かい点によく気づく", study: "ロジカルノート作成法" },
+                venus: { food: "ヘルシーなオーガニック料理", hobby: "手芸、パズル、ヘルスケア", attract: "清潔感がありマナーがしっかりした人", music: "繊細なクラシック" },
+                mars: { sport: "ピラティス、ウォーキング", motivation: "「目標数値を明確にしチェックリストを消化する」" },
+                jupiter: { action: "システムを効率化し実用的なサポートをする", investment: "データ分析・健康維持への投資" },
+                saturn: { skill: "複雑なプロセスを最適化する能力", savings: "データ主導の厳密貯蓄", selfMgmt: "チェックリストによる完璧管理", advice: "「自分にも他人にも『不完全さ』を許す寛容さを持とう」" },
+                dragonhead: { hobby: "身体メンテナンス・収納術追求", relation: "お互いを誠実に実質サポートできる環境" },
+                dragontail: { karma: "幻想や曖昧な雰囲気に流される過去の癖", pattern: "判断をあやふやにするパターン", release: "「曖昧な他力本願」への執着" }
+            },
+            "天秤座": {
+                personality: "抜群の美意識と優れた調整能力を持つ調和のソムリエ。洗練されたスタイルを好む。",
+                sun: { quote: "「調和と美しさの中に、真の強さが宿る。」", outfit: "エレガントでトレンド感のあるスタイル", color: "ローズピンク", item: "スタイリッシュなミラー" },
+                moon: { goods: "上質なハンドクリーム", place: "オシャレなラウンジ・美術展", stress: "友人とおしゃべりしてお茶する", interior: "シンメトリーサロン調" },
+                mercury: { book: "デザイン書・交渉術の本", talkHabit: "当たりの柔らかい公平な対話", study: "ディスカッション対話学習" },
+                venus: { food: "アフタヌーンティー、フレンチ", hobby: "アート鑑賞、ショッピング", attract: "センスがありスマートで立ち振る舞いが美しい人", music: "ボサノバ、R&B" },
+                mars: { sport: "テニス、ゴルフ", motivation: "「素敵な環境とウェアで取り組む」" },
+                jupiter: { action: "美しい人間関係とペアワークでの開花", investment: "マナー・センスアップ・外交力" },
+                saturn: { skill: "双方の顔を立て穏便に解決する交渉術", savings: "バランス重視スマート貯蓄", selfMgmt: "ワークライフバランス管理", advice: "「衝突を怖れず自分の本音を強く主張してみよう」" },
+                dragonhead: { hobby: "ファッションスタイリング・パーティー", relation: "対等で洗練された心地よい距離感のパートナーシップ" },
+                dragontail: { karma: "一人で抱え込み強がる癖", pattern: "単独行動で力づく解決するパターン", release: "「自分一人で戦わねば」という孤独な頑なさ" }
+            },
+            "蠍座": {
+                personality: "深い洞察力と不屈の意志を秘めたミステリアスな探究者。一度決めたらとことん極める。",
+                sun: { quote: "「暗闇を恐れるな。真実の光はその奥底にある。」", outfit: "シックでミステリアスなダークトーン", color: "ディープワインレッド", item: "天然石アクセサリー" },
+                moon: { goods: "深遠な香りのお香", place: "隠れ家Bar・静かな寺社", stress: "ディープな趣味に一人没頭する", interior: "シックでプライベート感の高い部屋" },
+                mercury: { book: "心理学書・ミステリー", talkHabit: "口数は少なめだが核心を突く", study: "一箇所を掘り下げるディープダイブ学習" },
+                venus: { food: "濃厚なチョコレート、熟成肉", hobby: "心理学研究、映画鑑賞", attract: "一途で深い絆を持てる人", music: "重厚なロック・ソウル" },
+                mars: { sport: "筋トレ、長距離走", motivation: "「極限まで追い込んで圧倒的達成感を得る」" },
+                jupiter: { action: "特定テーマと深い信頼関係を結ぶ", investment: "深い研究・心理学の学び" },
+                saturn: { skill: "驚異的な精神力と再生力", savings: "秘密の裏資産形成", selfMgmt: "全集中型目標管理", advice: "「過去の執着を手放し軽やかさを取り入れよう」" },
+                dragonhead: { hobby: "瞑想・占い・歴史探求", relation: "互いに秘密を持たず魂レベルで結びつける関係" },
+                dragontail: { karma: "物質的安全だけに満足してぬるま湯に浸かる癖", pattern: "無難な豊かさに留まるパターン", release: "「目に見える安全」への過剰執着" }
+            },
+            "射手座": {
+                personality: "高い理想と冒険心を持つ自由な哲学者。広い世界を目指して矢のように突き進む。",
+                sun: { quote: "「地平線の彼方に、まだ見ぬ冒険が私を待っている。」", outfit: "動きやすいアウトドア・自由なスタイル", color: "ターコイズブルー", item: "パスポート・洋書" },
+                moon: { goods: "海外のお土産品", place: "広々とした公園・見晴らしの良い場所", stress: "あてもなく知らない街へ旅立つ", interior: "開放的なエスニックミックス" },
+                mercury: { book: "哲学書・未来予測書", talkHabit: "スケールが大きく前向き", study: "概念から掴む大枠把握学習" },
+                venus: { food: "エスニック料理、シュラスコ", hobby: "海外旅行、言語学習", attract: "知性的で自由を愛するフットワークの軽い人", music: "ワールドミュージック" },
+                mars: { sport: "乗馬、スキー、アーチェリー", motivation: "「高いビジョンと自由な環境を与える」" },
+                jupiter: { action: "海外や高等学問など広い世界への探求", investment: "海外留学・哲学・専門知識" },
+                saturn: { skill: "複雑な事象から法則を見出す構想力", savings: "ダイナミック運用貯蓄", selfMgmt: "大まかなビジョン管理", advice: "「足元の細かい約束やルールも大切にしよう」" },
+                dragonhead: { hobby: "トレッキング・哲学探求", relation: "広い世界観を共有できる知的サークル" },
+                dragontail: { karma: "目先の雑学に振り回される癖", pattern: "表面的な言葉で会話を済ませるパターン", release: "「身近なくだらない比較」への関心" }
+            },
+            "山羊座": {
+                personality: "野心と責任感を兼ね備えた現実的達成者。時間をかけて確実に頂点へと登り詰める。",
+                sun: { quote: "「着実な一歩の積み重ねこそが、難攻不落の城を築く。」", outfit: "仕立ての良いコート、伝統的で格式高い服", color: "ダークグレー", item: "高級時計・万年筆" },
+                moon: { goods: "マッサージガン", place: "落ち着いた和室・自分の書斎", stress: "計画の進捗を確認して安心する", interior: "重厚感のあるダークウッド基調" },
+                mercury: { book: "偉人伝・ビジネス戦略書", talkHabit: "無駄がなく礼儀正しい", study: "体系的なテキスト積み上げ学習" },
+                venus: { food: "伝統的な和食、老舗料理", hobby: "登山、骨董品収集", attract: "自立しており尊敬できる目標を持つ人", music: "クラシックオーケストラ" },
+                mars: { sport: "登山、マラソン", motivation: "「明確な評価や社会的キャリアが見える」" },
+                jupiter: { action: "長期的な構造や組織を作り上げる", investment: "経営学・タイムマネジメント" },
+                saturn: { skill: "計画通り完遂する圧倒的社会遂行能力", savings: "隙のない長期計画貯蓄", selfMgmt: "タイムマネジメントの鬼", advice: "「肩の力を抜き自分の弱さや感情を出してみよう」" },
+                dragonhead: { hobby: "歴史研究・資格取得", relation: "尊敬し合えるプロ同士の社会的信頼関係" },
+                dragontail: { karma: "甘えて社会的な責任から逃げようとする癖", pattern: "依存的な態度を取ってしまうパターン", release: "「過剰な身内びいきや甘え」への固執" }
+            },
+            "水瓶座": {
+                personality: "独創的で未来志向の変革者。常識に囚われず、個性を尊重する博愛主義者。",
+                sun: { quote: "「常識を疑え。未来はいつだって常識の外で作られる。」", outfit: "個性的デザイナーズ・サイバー感スタイル", color: "エレクトリックパープル", item: "最新スマートフォン" },
+                moon: { goods: "ノイズキャンセリングヘッドホン", place: "プラネタリウム・オンライン空間", stress: "デジタルに没頭またはデジタルデトックス", interior: "未来的なガラス＆金属デザイン" },
+                mercury: { book: "SF小説・ITトレンド書", talkHabit: "客観的でフラット、ユニークな視点", study: "マインドマップ構造化学習" },
+                venus: { food: "フュージョン料理、ヴィーガン食", hobby: "プログラミング、サークル活動", attract: "自分の世界観を持ち対等に付き合える人", music: "テクノ、シンセポップ" },
+                mars: { sport: "eスポーツ、スケートボード", motivation: "「誰もやっていない斬新なアプローチを試す」" },
+                jupiter: { action: "未来志向のコミュニティを形成する", investment: "ITスキル・最新テクノロジー" },
+                saturn: { skill: "感情に流されずロジカルに構造化する思考", savings: "先進的暗号資産活用貯蓄", selfMgmt: "デジタルセルフデータ管理", advice: "「泥臭い人間の感情にも寄り添ってみよう」" },
+                dragonhead: { hobby: "未来技術研究・Web制作", relation: "年齢・性別を超えたフラットなネットワーク" },
+                dragontail: { karma: "自分が主役でないと気が済まない尊大さ", pattern: "大げさに振る舞う注目集めパターン", release: "「他人からの特別扱いや承認」への欲求" }
+            },
+            "魚座": {
+                personality: "境界線のない深い愛と感性を持つドリーマー。芸術的で豊かな想像力の持ち主。",
+                sun: { quote: "「愛と想像力には、どんな世界をも癒す力がある。」", outfit: "グラデーションカラーの幻想的な服", color: "ラベンダー", item: "オラクルカード" },
+                moon: { goods: "アロマディフューザー", place: "水辺（海・水族館）・映画館", stress: "音楽を聴き泣いてリセットする", interior: "間接照明とクッションの幻想空間" },
+                mercury: { book: "ファンタジー小説・詩集", talkHabit: "感覚的でポエティック", study: "イメージ・感情リンク学習法" },
+                venus: { food: "見た目がロマンチックなスイーツ", hobby: "イラスト・映画鑑賞・瞑想", attract: "優しく包み込み夢を一緒に追える人", music: "ドリームポップ、ヒーリング" },
+                mars: { sport: "水泳、ゆったりしたヨガ", motivation: "「イメージの世界に浸りながら動く」" },
+                jupiter: { action: "アートや優しさで人の心を解き放つ", investment: "芸術・心理カウンセリングの学び" },
+                saturn: { skill: "言葉を超えた直感で寄り添う無償の愛", savings: "自動積立による強制保存", selfMgmt: "メンタルデトックス管理", advice: "「現実的な境界線と『ノー』と言える強さを持とう」" },
+                dragonhead: { hobby: "絵画制作・ペットの保護", relation: "言葉がなくても心で通じ合えるヒーリング関係" },
+                dragontail: { karma: "完璧主義のあまり批判的になる過去の癖", pattern: "他人の不完全さを責めるパターン", release: "「こうあるべき」という厳しい完璧主義" }
+            }
+        };
+
+        // Standard Sun Sign boundaries for auto estimation
+        function getEstimatedSunSign(month, day) {
+            const dates = [
+                { sign: "山羊座", end: 19 }, { sign: "水瓶座", end: 18 },
+                { sign: "魚座", end: 20 }, { sign: "牡羊座", end: 19 },
+                { sign: "牡牛座", end: 20 }, { sign: "双子座", end: 21 },
+                { sign: "蟹座", end: 22 }, { sign: "獅子座", end: 22 },
+                { sign: "乙女座", end: 22 }, { sign: "天秤座", end: 23 },
+                { sign: "蠍座", end: 21 }, { sign: "射手座", end: 21 },
+                { sign: "山羊座", end: 31 }
+            ];
+            return day <= dates[month - 1].end ? dates[month - 1].sign : dates[(month % 12)].sign;
+        }
+
+        // --- 2. STATE MANAGEMENT ---
+        let userState = {
+            name: "冒険者",
+            birthDate: "2026-11-11",
+            birthTime: "12:00",
+            timeUnknown: false,
+            signs: {
+                sun: "魚座",
+                moon: "蟹座",
+                mercury: "魚座",
+                venus: "水瓶座",
+                mars: "双子座",
+                jupiter: "牡羊座",
+                saturn: "蟹座",
+                dragonhead: "蠍座",
+                dragontail: "牡牛座"
+            }
+        };
+
+        function toggleTimeUnknown() {
+            const isChecked = document.getElementById("time-unknown-check").checked;
+            userState.timeUnknown = isChecked;
+            const timeInput = document.getElementById("birth-time");
+            if (isChecked) {
+                timeInput.value = "12:00";
+                timeInput.disabled = true;
+                timeInput.classList.add("opacity-50", "cursor-not-allowed");
+            } else {
+                timeInput.disabled = false;
+                timeInput.classList.remove("opacity-50", "cursor-not-allowed");
+            }
+            autoCalculateSigns();
+        }
+
+        // --- 3. TEXT EXPORT FUNCTIONS ---
+        function generateExportText() {
+            let text = `========================================\n`;
+            text += ` 🌟 パーソナル・トリセツ＆ステータス診断 🌟\n`;
+            text += `========================================\n`;
+            text += `【プレイヤー名】 ${userState.name || "冒険者"}\n`;
+            text += `【生年月日】 ${userState.birthDate} ${userState.timeUnknown ? '(時間不明/12:00設定)' : userState.birthTime}\n\n`;
+
+            PLANETS_CONFIG.forEach(planet => {
+                const sign = userState.signs[planet.key];
+                const signData = ASTRO_DATA[sign] || {};
+                const pData = signData[planet.key] || {};
+
+                text += `----------------------------------------\n`;
+                text += `■ ${planet.name}：【${sign}】\n`;
+                text += `概要: ${planet.desc}\n`;
+                text += `基本性格: ${signData.personality || ""}\n`;
+
+                if (planet.key === "sun") {
+                    text += `・人生の名言: ${pData.quote || ""}\n`;
+                    text += `・勝負服: ${pData.outfit || ""}\n`;
+                    text += `・ラッキーカラー: ${pData.color || ""}\n`;
+                    text += `・ラッキーアイテム: ${pData.item || ""}\n`;
+                } else if (planet.key === "moon") {
+                    text += `・癒し系グッズ: ${pData.goods || ""}\n`;
+                    text += `・落ち着く場所: ${pData.place || ""}\n`;
+                    text += `・ストレス解消法: ${pData.stress || ""}\n`;
+                    text += `・好きなインテリア: ${pData.interior || ""}\n`;
+                } else if (planet.key === "mercury") {
+                    text += `・好きな本: ${pData.book || ""}\n`;
+                    text += `・会話のくせ: ${pData.talkHabit || ""}\n`;
+                    text += `・はかどる勉強法: ${pData.study || ""}\n`;
+                } else if (planet.key === "venus") {
+                    text += `・好きな食べ物: ${pData.food || ""}\n`;
+                    text += `・趣味: ${pData.hobby || ""}\n`;
+                    text += `・惹かれやすいタイプ: ${pData.attract || ""}\n`;
+                    text += `・音楽のジャンル: ${pData.music || ""}\n`;
+                } else if (planet.key === "mars") {
+                    text += `・好きなスポーツ: ${pData.sport || ""}\n`;
+                    text += `・モチベーションのあげ方: ${pData.motivation || ""}\n`;
+                } else if (planet.key === "jupiter") {
+                    text += `・開運アクション: ${pData.action || ""}\n`;
+                    text += `・自己投資の方向: ${pData.investment || ""}\n`;
+                } else if (planet.key === "saturn") {
+                    text += `・隠れたスキル: ${pData.skill || ""}\n`;
+                    text += `・貯蓄のスタイル: ${pData.savings || ""}\n`;
+                    text += `・自己管理術: ${pData.selfMgmt || ""}\n`;
+                    text += `・壁を乗り越えるアドバイス: ${pData.advice || ""}\n`;
+                } else if (planet.key === "dragonhead") {
+                    text += `・挑戦するとうまくいく趣味: ${pData.hobby || ""}\n`;
+                    text += `・理想の人間関係と環境: ${pData.relation || ""}\n`;
+                } else if (planet.key === "dragontail") {
+                    text += `・過去から引き継いだカルマ: ${pData.karma || ""}\n`;
+                    text += `・無意識な得意パターン: ${pData.pattern || ""}\n`;
+                    text += `・手放すべき執着: ${pData.release || ""}\n`;
+                }
+                text += `\n`;
+            });
+
+            text += `========================================\n`;
+            text += ` ASTRO STATUS BOARD\n`;
+            text += `========================================\n`;
+            return text;
+        }
+
+        function openTextExportModal() {
+            const textarea = document.getElementById("export-textarea");
+            textarea.value = generateExportText();
+            document.getElementById("text-export-modal").classList.remove("hidden");
+        }
+
+        function closeTextExportModal() {
+            document.getElementById("text-export-modal").classList.add("hidden");
+        }
+
+        function copyExportText() {
+            const textarea = document.getElementById("export-textarea");
+            textarea.select();
+            document.execCommand('copy');
+            alertCustom("テキストをクリップボードにコピーしました！");
+        }
+
+        function downloadTextFile() {
+            const text = generateExportText();
+            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${userState.name || '冒険者'}_パーソナル・トリセツ.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function alertCustom(msg) {
+            // Friendly custom notification toast
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-6 right-6 z-50 bg-indigo-600 text-white px-4 py-3 rounded-xl shadow-2xl text-xs font-bold transition-all duration-300 flex items-center gap-2';
+            toast.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4"></i> ${msg}`;
+            document.body.appendChild(toast);
+            if (window.lucide) lucide.createIcons();
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // --- 4. UI GENERATION & RENDER ---
+        function renderPlanetSelectors() {
+            const container = document.getElementById("planet-select-grid");
+            if (!container) return;
+            container.innerHTML = "";
+
+            PLANETS_CONFIG.forEach(planet => {
+                const div = document.createElement("div");
+                div.className = "bg-slate-900/90 border border-slate-700/80 p-2.5 rounded-xl flex flex-col justify-between";
+
+                const optionsHtml = ZODIAC_SIGNS.map(sign => 
+                    `<option value="${sign}" ${userState.signs[planet.key] === sign ? 'selected' : ''}>${sign}</option>`
+                ).join("");
+
+                div.innerHTML = `
+                    <div class="flex items-center gap-1.5 mb-1 text-xs font-bold ${planet.textColor}">
+                        <i data-lucide="${planet.icon}" class="w-3.5 h-3.5"></i>
+                        <span>${planet.name}</span>
+                    </div>
+                    <select onchange="updateSingleSign('${planet.key}', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-indigo-500">
+                        ${optionsHtml}
+                    </select>
+                `;
+                container.appendChild(div);
+            });
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function renderStatusBoard() {
+            const grid = document.getElementById("status-display-grid");
+            if (!grid) return;
+            grid.innerHTML = "";
+
+            document.getElementById("display-name").textContent = userState.name || "冒険者";
+            document.getElementById("display-date").textContent = `${userState.birthDate} 生まれ`;
+            document.getElementById("display-title").textContent = `太陽: ${userState.signs.sun} / 月: ${userState.signs.moon}`;
+            document.getElementById("sun-summary").innerHTML = `<i data-lucide="sun" class="w-4 h-4"></i> ${userState.signs.sun}`;
+            document.getElementById("moon-summary").innerHTML = `<i data-lucide="moon" class="w-4 h-4"></i> ${userState.signs.moon}`;
+
+            PLANETS_CONFIG.forEach(planet => {
+                const sign = userState.signs[planet.key] || "牡羊座";
+                const signData = ASTRO_DATA[sign] || ASTRO_DATA["牡羊座"];
+                const planetSpecificData = signData[planet.key] || {};
+
+                const card = document.createElement("div");
+                card.className = "status-card rounded-2xl p-6 relative overflow-hidden flex flex-col justify-between transition-all duration-300";
+
+                let detailsHtml = "";
+
+                if (planet.key === "sun") {
+                    detailsHtml = `
+                        <div class="space-y-3 mt-4">
+                            <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                                <span class="text-[11px] font-bold text-amber-400 block mb-0.5">💬 人生の名言 (心の指針)</span>
+                                <p class="text-xs italic text-slate-200">${planetSpecificData.quote || "-"}</p>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
+                                <div class="bg-slate-900/40 p-2.5 rounded-lg border border-slate-800/80">
+                                    <span class="text-[10px] text-slate-400 block font-semibold">👗 勝負服</span>
+                                    <span class="text-slate-200 font-medium">${planetSpecificData.outfit || "-"}</span>
+                                </div>
+                                <div class="bg-slate-900/40 p-2.5 rounded-lg border border-slate-800/80">
+                                    <span class="text-[10px] text-slate-400 block font-semibold">🎨 ラッキーカラー</span>
+                                    <span class="text-slate-200 font-medium">${planetSpecificData.color || "-"}</span>
+                                </div>
+                                <div class="bg-slate-900/40 p-2.5 rounded-lg border border-slate-800/80">
+                                    <span class="text-[10px] text-slate-400 block font-semibold">💎 ラッキーアイテム</span>
+                                    <span class="text-slate-200 font-medium">${planetSpecificData.item || "-"}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if (planet.key === "moon") {
+                    const unknownNote = userState.timeUnknown ? `
+                        <div class="mb-3 text-[10px] bg-cyan-950/40 border border-cyan-800/40 text-cyan-300 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5">
+                            <i data-lucide="info" class="w-3.5 h-3.5 shrink-0"></i>
+                            <span>※時間は「不明（12:00設定）」のため、実際の月星座とは数度ズレる可能性があります。正確な月星座を知るには出生時間が必要です。</span>
+                        </div>
+                    ` : '';
+
+                    detailsHtml = `
+                        <div class="mt-4">
+                            ${unknownNote}
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                                    <span class="text-[11px] text-cyan-400 font-bold block mb-1">🧸 癒し系グッズ</span>
+                                    <p class="text-slate-200">${planetSpecificData.goods || "-"}</p>
+                                </div>
+                                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                                    <span class="text-[11px] text-cyan-400 font-bold block mb-1">🏡 落ち着く場所</span>
+                                    <p class="text-slate-200">${planetSpecificData.place || "-"}</p>
+                                </div>
+                                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                                    <span class="text-[11px] text-cyan-400 font-bold block mb-1">🧘 ストレス解消法</span>
+                                    <p class="text-slate-200">${planetSpecificData.stress || "-"}</p>
+                                </div>
+                                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                                    <span class="text-[11px] text-cyan-400 font-bold block mb-1">🛋️ 好きなインテリア</span>
+                                    <p class="text-slate-200">${planetSpecificData.interior || "-"}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if (planet.key === "mercury") {
+                    detailsHtml = `
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4 text-xs">
+                            <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                                <span class="text-[11px] text-emerald-400 font-bold block mb-1">📚 好きな本</span>
+                                <p class="text-slate-200">${planetSpecificData.book || "-"}</p>
+                            </div>
+                            <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                                <span class="text-[11px] text-emerald-400 font-bold block mb-1">🗣️ 会話のくせ</span>
+                                <p class="text-slate-200">${planetSpecificData.talkHabit || "-"}</p>
+                            </div>
+                            <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                                <span class="text-[11px] text-emerald-400 font-bold block mb-1">📝 はかどる勉強法</span>
+                                <p class="text-slate-200">${planetSpecificData.study || "-"}</p>
+                            </div>
+                        </div>
+                    `;
+                } else if (planet.key === "venus") {
+                    detailsHtml = `
+                        <div class="grid grid-cols-2 gap-3 mt-4 text-xs">
+                            <div class="bg-slate-900/50 p-2.5 rounded-xl border border-slate-800">
+                                <span class="text-[10px] text-pink-400 font-bold block mb-0.5">🍰 好きな食べ物</span>
+                                <p class="text-slate-200">${planetSpecificData.food || "-"}</p>
+                            </div>
+                            <div class="bg-slate-900/50 p-2.5 rounded-xl border border-slate-800">
+                                <span class="text-[10px] text-pink-400 font-bold block mb-0.5">🎨 趣味</span>
+                                <p class="text-slate-200">${planetSpecificData.hobby || "-"}</p>
+                            </div>
+                            <div class="bg-slate-900/50 p-2.5 rounded-xl border border-slate-800">
+                                <span class="text-[10px] text-pink-400 font-bold block mb-0.5">💘 惹かれやすいタイプ</span>
+                                <p class="text-slate-200">${planetSpecificData.attract || "-"}</p>
+                            </div>
+                            <div class="bg-slate-900/50 p-2.5 rounded-xl border border-slate-800">
+                                <span class="text-[10px] text-pink-400 font-bold block mb-0.5">🎵 音楽のジャンル</span>
+                                <p class="text-slate-200">${planetSpecificData.music || "-"}</p>
+                            </div>
+                        </div>
+                    `;
+                } else if (planet.key === "mars") {
+                    detailsHtml = `
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 text-xs">
+                            <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                                <span class="text-[11px] text-red-400 font-bold block mb-1">⚽ 好きなスポーツ</span>
+                                <p class="text-slate-200">${planetSpecificData.sport || "-"}</p>
+                            </div>
+                            <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                                <span class="text-[11px] text-red-400 font-bold block mb-1">🔥 モチベーションのあげ方</span>
+                                <p class="text-slate-200">${planetSpecificData.motivation || "-"}</p>
+                            </div>
+                        </div>
+                    `;
+                } else if (planet.key === "jupiter") {
+                    detailsHtml = `
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 text-xs">
+                            <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                                <span class="text-[11px] text-yellow-400 font-bold block mb-1">🍀 開運アクション</span>
+                                <p class="text-slate-200">${planetSpecificData.action || "-"}</p>
+                            </div>
+                            <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                                <span class="text-[11px] text-yellow-400 font-bold block mb-1">📈 自己投資の方向</span>
+                                <p class="text-slate-200">${planetSpecificData.investment || "-"}</p>
+                            </div>
+                        </div>
+                    `;
+                } else if (planet.key === "saturn") {
+                    detailsHtml = `
+                        <div class="grid grid-cols-2 gap-3 mt-4 text-xs">
+                            <div class="bg-slate-900/50 p-2.5 rounded-xl border border-slate-800">
+                                <span class="text-[10px] text-indigo-400 font-bold block mb-0.5">🔑 隠れたスキル</span>
+                                <p class="text-slate-200">${planetSpecificData.skill || "-"}</p>
+                            </div>
+                            <div class="bg-slate-900/50 p-2.5 rounded-xl border border-slate-800">
+                                <span class="text-[10px] text-indigo-400 font-bold block mb-0.5">💰 貯蓄のスタイル</span>
+                                <p class="text-slate-200">${planetSpecificData.savings || "-"}</p>
+                            </div>
+                            <div class="bg-slate-900/50 p-2.5 rounded-xl border border-slate-800">
+                                <span class="text-[10px] text-indigo-400 font-bold block mb-0.5">⏰ 自己管理術</span>
+                                <p class="text-slate-200">${planetSpecificData.selfMgmt || "-"}</p>
+                            </div>
+                            <div class="bg-slate-900/50 p-2.5 rounded-xl border border-slate-800">
+                                <span class="text-[10px] text-indigo-400 font-bold block mb-0.5">🛡️ 壁を乗り越えるアドバイス</span>
+                                <p class="text-slate-200">${planetSpecificData.advice || "-"}</p>
+                            </div>
+                        </div>
+                    `;
+                } else if (planet.key === "dragonhead") {
+                    detailsHtml = `
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 text-xs">
+                            <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                                <span class="text-[11px] text-purple-400 font-bold block mb-1">🚀 挑戦するとうまくいく趣味</span>
+                                <p class="text-slate-200">${planetSpecificData.hobby || "-"}</p>
+                            </div>
+                            <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                                <span class="text-[11px] text-purple-400 font-bold block mb-1">✨ 理想の人間関係と環境</span>
+                                <p class="text-slate-200">${planetSpecificData.relation || "-"}</p>
+                            </div>
+                        </div>
+                    `;
+                } else if (planet.key === "dragontail") {
+                    detailsHtml = `
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4 text-xs">
+                            <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                                <span class="text-[11px] text-slate-400 font-bold block mb-1">🌀 過去から引き継いだカルマ</span>
+                                <p class="text-slate-300">${planetSpecificData.karma || "-"}</p>
+                            </div>
+                            <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                                <span class="text-[11px] text-slate-400 font-bold block mb-1">⚡ 無意識な得意パターン</span>
+                                <p class="text-slate-300">${planetSpecificData.pattern || "-"}</p>
+                            </div>
+                            <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                                <span class="text-[11px] text-slate-400 font-bold block mb-1">🕊️ 手放すべき執着</span>
+                                <p class="text-slate-300">${planetSpecificData.release || "-"}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${planet.color} flex items-center justify-center text-white shadow-md">
+                                    <i data-lucide="${planet.icon}" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="font-bold text-base text-white">${planet.name}</h3>
+                                        <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-800 ${planet.textColor} border border-slate-700">
+                                            ${sign}
+                                        </span>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400">${planet.desc}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Basic Sign Personality Summary -->
+                        <div class="mt-3 text-xs bg-slate-900/30 p-2.5 rounded-lg text-slate-300 border border-slate-800/50">
+                            <span class="font-semibold text-slate-400 text-[10px] block">基本傾向</span>
+                            ${signData.personality || ""}
+                        </div>
+
+                        <!-- Planet Specific Features -->
+                        ${detailsHtml}
+                    </div>
+                `;
+
+                grid.appendChild(card);
+            });
+
+            if (window.lucide) lucide.createIcons();
+        }
+
+        // --- 5. EVENT HANDLERS & LOGIC ---
+        function updateName(val) {
+            userState.name = val;
+            const el = document.getElementById("display-name");
+            if (el) el.textContent = val || "冒険者";
+        }
+
+        function updateSingleSign(planetKey, signValue) {
+            userState.signs[planetKey] = signValue;
+            
+            if (planetKey === "dragonhead") {
+                const headIndex = ZODIAC_SIGNS.indexOf(signValue);
+                const tailIndex = (headIndex + 6) % 12;
+                userState.signs.dragontail = ZODIAC_SIGNS[tailIndex];
+                renderPlanetSelectors();
+            }
+            
+            renderStatusBoard();
+        }
+
+        function autoCalculateSigns() {
+            const dateVal = document.getElementById("birth-date").value;
+            const timeVal = document.getElementById("birth-time").value;
+            if (!dateVal) return;
+
+            userState.birthDate = dateVal;
+            userState.birthTime = timeVal;
+
+            const [year, month, day] = dateVal.split("-").map(Number);
+            const [hours, minutes] = (timeVal || "12:00").split(":").map(Number);
+            
+            const jstDate = new Date(Date.UTC(year, month - 1, day, hours - 9, minutes));
+            const d = (jstDate.getTime() - Date.UTC(2000, 0, 1, 12, 0, 0)) / 86400000.0;
+
+            const rad = Math.PI / 180;
+            const norm = (deg) => (deg % 360 + 360) % 360;
+            const getSign = (lon) => ZODIAC_SIGNS[Math.floor(norm(lon) / 30)];
+
+            const sunMeanAnomaly = norm(357.529 + 0.98560028 * d);
+            const sunMeanLon = norm(280.459 + 0.98564736 * d);
+            const sunTrueLon = norm(sunMeanLon + 1.915 * Math.sin(sunMeanAnomaly * rad) + 0.020 * Math.sin(2 * sunMeanAnomaly * rad));
+
+            const moonL = norm(218.316 + 13.176396 * d);
+            const moonM = norm(134.963 + 13.064993 * d);
+            const moonF = norm(93.272 + 13.229350 * d);
+            const moonD = norm(297.850 + 12.190749 * d);
+            const moonTrueLon = norm(moonL 
+                + 6.289 * Math.sin(moonM * rad) 
+                - 1.274 * Math.sin((moonM - 2 * moonD) * rad)
+                + 0.658 * Math.sin(2 * moonD * rad)
+                - 0.214 * Math.sin(2 * moonM * rad)
+                - 0.186 * Math.sin(sunMeanAnomaly * rad)
+                + 0.114 * Math.sin(2 * moonF * rad));
+
+            function getPlanetGeocentricLon(N0, N_rate, i0, w0, w_rate, a0, e0, M0, M_rate) {
+                const M = norm(M0 + M_rate * d);
+                const E = M + (e0 * 180 / Math.PI) * Math.sin(M * rad) * (1 + e0 * Math.cos(M * rad));
+                const xv = a0 * (Math.cos(E * rad) - e0);
+                const yv = a0 * Math.sqrt(1.0 - e0 * e0) * Math.sin(E * rad);
+                const v = norm(Math.atan2(yv, xv) / rad);
+                const r = Math.sqrt(xv * xv + yv * yv);
+                
+                const N = norm(N0 + N_rate * d);
+                const w = norm(w0 + w_rate * d);
+                const u = norm(v + w);
+                const xh = r * (Math.cos(N * rad) * Math.cos(u * rad) - Math.sin(N * rad) * Math.sin(u * rad) * Math.cos(i0 * rad));
+                const yh = r * (Math.sin(N * rad) * Math.cos(u * rad) + Math.cos(N * rad) * Math.sin(u * rad) * Math.cos(i0 * rad));
+
+                const R_earth = 1.000001018 * (1 - 0.0167086 * Math.cos(sunMeanAnomaly * rad));
+                const x_earth = R_earth * Math.cos(sunTrueLon * rad);
+                const y_earth = R_earth * Math.sin(sunTrueLon * rad);
+
+                const xg = xh + x_earth;
+                const yg = yh + y_earth;
+
+                return norm(Math.atan2(yg, xg) / rad);
+            }
+
+            const mercuryLon = getPlanetGeocentricLon(48.331, 3.2458e-5, 7.005, 29.124, 1.0144e-5, 0.387098, 0.205630, 174.796, 4.0923344);
+            const venusLon = getPlanetGeocentricLon(76.680, 2.4659e-5, 3.394, 54.884, 1.3837e-5, 0.723330, 0.006773, 50.115, 1.6021302);
+            const marsLon = getPlanetGeocentricLon(49.558, 2.1108e-5, 1.850, 286.502, 2.9296e-5, 1.523679, 0.093401, 19.373, 0.5240208);
+            const jupiterLon = getPlanetGeocentricLon(100.464, 1.807e-5, 1.303, 273.867, 1.645e-5, 5.20260, 0.048498, 20.020, 0.0830853);
+            const saturnLon = getPlanetGeocentricLon(113.666, 2.389e-5, 2.489, 339.392, 2.976e-5, 9.55490, 0.055546, 317.020, 0.0334441);
+
+            const headLon = norm(125.0445 - 0.0529538083 * d);
+
+            userState.signs.sun = getSign(sunTrueLon);
+            userState.signs.moon = getSign(moonTrueLon);
+            userState.signs.mercury = getSign(mercuryLon);
+            userState.signs.venus = getSign(venusLon);
+            userState.signs.mars = getSign(marsLon);
+            userState.signs.jupiter = getSign(jupiterLon);
+            userState.signs.saturn = getSign(saturnLon);
+
+            const dh = getSign(headLon);
+            userState.signs.dragonhead = dh;
+            
+            const headIdx = ZODIAC_SIGNS.indexOf(dh);
+            userState.signs.dragontail = ZODIAC_SIGNS[(headIdx + 6) % 12];
+
+            renderPlanetSelectors();
+            renderStatusBoard();
+        }
+
+        function scrollToInput() {
+            document.getElementById("input-section").scrollIntoView({ behavior: "smooth" });
+        }
+
+        window.onload = function() {
+            document.getElementById("birth-date").value = userState.birthDate;
+            document.getElementById("birth-time").value = userState.birthTime;
+            document.getElementById("time-unknown-check").checked = userState.timeUnknown;
+            
+            renderPlanetSelectors();
+            renderStatusBoard();
+        };
+    </script>
+</body>
+</html>
