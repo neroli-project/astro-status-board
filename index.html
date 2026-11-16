@@ -97,9 +97,7 @@
                 <button onclick="scrollToInput()" class="no-print text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg border border-slate-700 transition flex items-center gap-1">
                     <i data-lucide="sliders" class="w-4 h-4"></i> 天体設定
                 </button>
-                <button onclick="openTextExportModal()" class="no-print text-xs bg-emerald-600/80 hover:bg-emerald-600 text-white px-3 py-2 rounded-lg transition flex items-center gap-1 shadow-md">
-                    <i data-lucide="file-text" class="w-4 h-4"></i> テキスト出力
-                </button>
+                
             </div>
         </div>
     </header>
@@ -188,30 +186,6 @@
         </div>
 
     </main>
-
-    <!-- Text Export Modal -->
-    <div id="text-export-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl p-6 shadow-2xl relative flex flex-col max-h-[90vh]">
-            <div class="flex justify-between items-center pb-3 border-b border-slate-800 mb-4">
-                <h3 class="text-lg font-bold text-indigo-300 flex items-center gap-2">
-                    <i data-lucide="file-text" class="w-5 h-5"></i> パーソナル・トリセツ (テキスト形式)
-                </h3>
-                <button onclick="closeTextExportModal()" class="text-slate-400 hover:text-white p-1">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-            <p class="text-xs text-slate-400 mb-3">下のテキストをコピーしてメモ帳やSNSに貼り付けたり、テキストファイルとして保存できます。</p>
-            <textarea id="export-textarea" readonly class="w-full flex-1 bg-slate-950 border border-slate-800 rounded-xl p-4 text-xs font-mono text-slate-200 h-80 focus:outline-none resize-none mb-4"></textarea>
-            <div class="flex justify-end gap-3">
-                <button onclick="copyExportText()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-indigo-600/30">
-                    <i data-lucide="copy" class="w-4 h-4"></i> クリップボードにコピー
-                </button>
-                <button onclick="downloadTextFile()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 border border-slate-700">
-                    <i data-lucide="download" class="w-4 h-4"></i> テキストファイルで保存
-                </button>
-            </div>
-        </div>
-    </div>
 
     <!-- Footer -->
     <footer class="mt-12 text-center text-xs text-slate-500 border-t border-slate-800/80 pt-6 no-print">
@@ -430,114 +404,7 @@
             autoCalculateSigns();
         }
 
-        // --- 3. TEXT EXPORT FUNCTIONS ---
-        function generateExportText() {
-            let text = `========================================\n`;
-            text += ` 🌟 パーソナル・トリセツ＆ステータス診断 🌟\n`;
-            text += `========================================\n`;
-            text += `【プレイヤー名】 ${userState.name || "冒険者"}\n`;
-            text += `【生年月日】 ${userState.birthDate} ${userState.timeUnknown ? '(時間不明/12:00設定)' : userState.birthTime}\n\n`;
-
-            PLANETS_CONFIG.forEach(planet => {
-                const sign = userState.signs[planet.key];
-                const signData = ASTRO_DATA[sign] || {};
-                const pData = signData[planet.key] || {};
-
-                text += `----------------------------------------\n`;
-                text += `■ ${planet.name}：【${sign}】\n`;
-                text += `概要: ${planet.desc}\n`;
-                text += `基本性格: ${signData.personality || ""}\n`;
-
-                if (planet.key === "sun") {
-                    text += `・人生の名言: ${pData.quote || ""}\n`;
-                    text += `・勝負服: ${pData.outfit || ""}\n`;
-                    text += `・ラッキーカラー: ${pData.color || ""}\n`;
-                    text += `・ラッキーアイテム: ${pData.item || ""}\n`;
-                } else if (planet.key === "moon") {
-                    text += `・癒し系グッズ: ${pData.goods || ""}\n`;
-                    text += `・落ち着く場所: ${pData.place || ""}\n`;
-                    text += `・ストレス解消法: ${pData.stress || ""}\n`;
-                    text += `・好きなインテリア: ${pData.interior || ""}\n`;
-                } else if (planet.key === "mercury") {
-                    text += `・好きな本: ${pData.book || ""}\n`;
-                    text += `・会話のくせ: ${pData.talkHabit || ""}\n`;
-                    text += `・はかどる勉強法: ${pData.study || ""}\n`;
-                } else if (planet.key === "venus") {
-                    text += `・好きな食べ物: ${pData.food || ""}\n`;
-                    text += `・趣味: ${pData.hobby || ""}\n`;
-                    text += `・惹かれやすいタイプ: ${pData.attract || ""}\n`;
-                    text += `・音楽のジャンル: ${pData.music || ""}\n`;
-                } else if (planet.key === "mars") {
-                    text += `・好きなスポーツ: ${pData.sport || ""}\n`;
-                    text += `・モチベーションのあげ方: ${pData.motivation || ""}\n`;
-                } else if (planet.key === "jupiter") {
-                    text += `・開運アクション: ${pData.action || ""}\n`;
-                    text += `・自己投資の方向: ${pData.investment || ""}\n`;
-                } else if (planet.key === "saturn") {
-                    text += `・隠れたスキル: ${pData.skill || ""}\n`;
-                    text += `・貯蓄のスタイル: ${pData.savings || ""}\n`;
-                    text += `・自己管理術: ${pData.selfMgmt || ""}\n`;
-                    text += `・壁を乗り越えるアドバイス: ${pData.advice || ""}\n`;
-                } else if (planet.key === "dragonhead") {
-                    text += `・挑戦するとうまくいく趣味: ${pData.hobby || ""}\n`;
-                    text += `・理想の人間関係と環境: ${pData.relation || ""}\n`;
-                } else if (planet.key === "dragontail") {
-                    text += `・過去から引き継いだカルマ: ${pData.karma || ""}\n`;
-                    text += `・無意識な得意パターン: ${pData.pattern || ""}\n`;
-                    text += `・手放すべき執着: ${pData.release || ""}\n`;
-                }
-                text += `\n`;
-            });
-
-            text += `========================================\n`;
-            text += ` ASTRO STATUS BOARD\n`;
-            text += `========================================\n`;
-            return text;
-        }
-
-        function openTextExportModal() {
-            const textarea = document.getElementById("export-textarea");
-            textarea.value = generateExportText();
-            document.getElementById("text-export-modal").classList.remove("hidden");
-        }
-
-        function closeTextExportModal() {
-            document.getElementById("text-export-modal").classList.add("hidden");
-        }
-
-        function copyExportText() {
-            const textarea = document.getElementById("export-textarea");
-            textarea.select();
-            document.execCommand('copy');
-            alertCustom("テキストをクリップボードにコピーしました！");
-        }
-
-        function downloadTextFile() {
-            const text = generateExportText();
-            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${userState.name || '冒険者'}_パーソナル・トリセツ.txt`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        function alertCustom(msg) {
-            // Friendly custom notification toast
-            const toast = document.createElement('div');
-            toast.className = 'fixed bottom-6 right-6 z-50 bg-indigo-600 text-white px-4 py-3 rounded-xl shadow-2xl text-xs font-bold transition-all duration-300 flex items-center gap-2';
-            toast.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4"></i> ${msg}`;
-            document.body.appendChild(toast);
-            if (window.lucide) lucide.createIcons();
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-
+       
         // --- 4. UI GENERATION & RENDER ---
         function renderPlanetSelectors() {
             const container = document.getElementById("planet-select-grid");
